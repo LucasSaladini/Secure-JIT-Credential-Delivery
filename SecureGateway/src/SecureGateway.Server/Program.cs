@@ -21,6 +21,7 @@ var host = new HostBuilder()
         services.AddSingleton<ICredentialService, CredentialService>();
         services.AddSingleton<ISecurityService, SecurityService>();
         services.AddScoped<IAuditService, AuditService>();
+        services.AddSingleton<IVaultService, VaultService>();
     })
     .Build();
 

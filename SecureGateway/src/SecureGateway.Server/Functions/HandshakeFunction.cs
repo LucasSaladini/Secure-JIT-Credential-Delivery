@@ -13,12 +13,14 @@ public class HandshakeFunction
     private readonly ISecurityService _securityService;
     private readonly ILogger<HandshakeFunction> _logger;
     private readonly IAuditService _auditService;
+    private readonly IVaultService _vaultService;
     
-    public HandshakeFunction(ISecurityService securityService, ILoggerFactory loggerFactory, IAuditService auditService)
+    public HandshakeFunction(ISecurityService securityService, ILoggerFactory loggerFactory, IAuditService auditService, IVaultService vaultService)
     {
         _securityService = securityService;
         _logger = loggerFactory.CreateLogger<HandshakeFunction>();
         _auditService = auditService;
+        _vaultService = vaultService;
     }
 
     [Function("CredentialHandshake")]
@@ -49,15 +51,23 @@ public class HandshakeFunction
 
         var auditId = await _auditService.LogAccessAsync(request, true, "Access Granted", clientIp);
 
-        // TODO 3. Searches on Key Vault (Substituir "DUMMY_SECRET_FOR_NOW")
+        try 
+        {
+            string secretValue = await _vaultService.GetSecretAsync(request.ResourceKey);
 
-        var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteAsJsonAsync(new CredentialResponse(
-            "DUMMY_SECRET_FOR_NOW",
-            DateTime.UtcNow.AddMinutes(5),
-            auditId.ToString()
-        ));
-
-        return response;
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            await response.WriteAsJsonAsync(new CredentialResponse(
+                secretValue,
+                DateTime.UtcNow.AddMinutes(5),
+                auditId.ToString()
+            ));
+            return response;
+        }
+        catch (Exception)
+        {
+            _logger.LogError("Key Vault Retrieval Failed for ClientIp: {clientIp}", clientIp);
+            await _auditService.LogAccessAsync(request, false, "Key Vault Retrieval Failed", clientIp);
+            return req.CreateResponse(HttpStatusCode.InternalServerError);
+        }
     }
 }
