@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using OtpNet;
 using SecureGateway.Server.Interfaces;
 using SecureGateway.Shared.DTOs;
 
@@ -18,5 +19,13 @@ public class SecurityService : ISecurityService
         var computedHash = Convert.ToBase64String(hashBytes);
 
         return computedHash == request.RequestHash;
+    }
+
+    public bool IsValidMfa(string secretSeed, string providedCode)
+    {
+        var base32Bytes = Base32Encoding.ToBytes(secretSeed); 
+        var totp = new Totp(base32Bytes);
+
+        return totp.VerifyTotp(providedCode, out _, VerificationWindow.RfcSpecifiedNetworkDelay);
     }
 }
