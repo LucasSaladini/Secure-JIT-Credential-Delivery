@@ -39,7 +39,6 @@ public class HandshakeFunction
                        ? values.FirstOrDefault() ?? "0.0.0.0" 
                        : "0.0.0.0";
 
-        // TODO: Em produção, buscar de uma Secret Store real
         const string mockClientSecret = "SHARED_MASTER_KEY";
 
         if (!_securityService.IsValidSignature(request, mockClientSecret))
@@ -53,6 +52,16 @@ public class HandshakeFunction
 
         try 
         {
+            string mfaSeed = await _vaultService.GetSecretAsync($"MFA-SEED-{request.ClientId}");
+
+            if(!_securityService.IsValidMfa(mfaSeed, request.OneTimePassword ?? ""))
+            {
+                await _auditService.LogAccessAsync(request, false, "MFA Validation Failed", clientIp);
+                _logger.LogWarning("MFA Failed for ClientId: {ClientId}", request.ClientId);
+
+                return req.CreateResponse(HttpStatusCode.Unauthorized);
+            }
+             
             string secretValue = await _vaultService.GetSecretAsync(request.ResourceKey);
 
             var response = req.CreateResponse(HttpStatusCode.OK);
@@ -63,8 +72,9 @@ public class HandshakeFunction
             ));
             return response;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.WriteLine($"DEBUG ERROR: {ex.Message} | {ex.StackTrace}");
             _logger.LogError("Key Vault Retrieval Failed for ClientIp: {clientIp}", clientIp);
             await _auditService.LogAccessAsync(request, false, "Key Vault Retrieval Failed", clientIp);
             return req.CreateResponse(HttpStatusCode.InternalServerError);

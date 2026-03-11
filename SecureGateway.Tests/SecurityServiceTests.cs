@@ -64,6 +64,23 @@ public class SecurityServiceTests
         Assert.False(result, "O sistema não deve aceitar um hash gerado para um recurso diferente.");
     }
 
+    [Fact]
+    public void IsValidMfa_WithCorrectCode_ReturnsTrue()
+    {
+        // Arrange
+        var service = new SecurityService();
+        var seed = "JBSWY3DPEHPK3PXP";
+        var byteSecret = OtpNet.Base32Encoding.ToBytes(seed);
+        var totp = new OtpNet.Totp(byteSecret);
+        var currentCode = totp.ComputeTotp();
+
+        // Act
+        var result = service.IsValidMfa(seed, currentCode);
+
+        // Assert
+        Assert.True(result);
+    }
+
     private string GenerateTestHash(string clientId, string resourceKey, string secret)
     {
         var payload = $"{clientId}:{resourceKey}";

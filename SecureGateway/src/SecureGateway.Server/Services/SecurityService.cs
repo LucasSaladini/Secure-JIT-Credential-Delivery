@@ -21,11 +21,20 @@ public class SecurityService : ISecurityService
         return computedHash == request.RequestHash;
     }
 
-    public bool IsValidMfa(string secretSeed, string providedCode)
+    public bool IsValidMfa(string clientOtpSeed, string providedCode)
     {
-        var base32Bytes = Base32Encoding.ToBytes(secretSeed); 
-        var totp = new Totp(base32Bytes);
+        if (string.IsNullOrWhiteSpace(providedCode)) return false;
 
-        return totp.VerifyTotp(providedCode, out _, VerificationWindow.RfcSpecifiedNetworkDelay);
+        try
+        {
+            var byteSecret = Base32Encoding.ToBytes(clientOtpSeed);
+            var totp = new Totp(byteSecret);
+            
+            return totp.VerifyTotp(providedCode, out _, VerificationWindow.RfcSpecifiedNetworkDelay);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

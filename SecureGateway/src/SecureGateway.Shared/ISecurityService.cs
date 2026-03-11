@@ -5,4 +5,5 @@ namespace SecureGateway.Server.Interfaces;
 public interface ISecurityService
 {
     bool IsValidSignature(CredentialRequest request, string clientSecret);
+    bool IsValidMfa(string clientOtpSecret, string providedCode);
 }
