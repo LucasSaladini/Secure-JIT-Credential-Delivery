@@ -1,4 +1,4 @@
-namespace SecureGatewat.Shared;
+namespace SecureGateway.Server.Interfaces;
 
 public interface ICredentialService
 {

@@ -1,7 +1,7 @@
-using SecureGatewat.Shared;
 using Azure.Security.KeyVault.Secrets;
+using SecureGateway.Server.Interfaces;
 
-namespace SecureGatewat.Server.Services;
+namespace SecureGateway.Server.Services;
 
 public class CredentialService : ICredentialService
 {

@@ -1,10 +1,10 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using SecureGatewat.Shared;
-using SecureGatewat.Server.Services;
+using SecureGateway.Server.Services;
 using Microsoft.Extensions.Azure;
 using Azure.Identity;
+using SecureGateway.Server.Interfaces;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
@@ -19,6 +19,8 @@ var host = new HostBuilder()
         });
 
         services.AddSingleton<ICredentialService, CredentialService>();
+        services.AddSingleton<ISecurityService, SecurityService>();
+        services.AddScoped<IAuditService, AuditService>();
     })
     .Build();
 

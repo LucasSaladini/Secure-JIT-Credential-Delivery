@@ -66,6 +66,8 @@ if [ -f "$serverProj" ]; then
     dotnet add "$serverProj" package Azure.Identity
     dotnet add "$serverProj" package OtpNet
     dotnet add "$serverProj" package Microsoft.Data.SqlClient
+    dotnet add "$serverProj" package Dapper
+    otnet add "$serverProj" package Microsoft.Extensions.Logging.ApplicationInsights
     dotnet add "$serverProj" reference SecureGateway.Shared/SecureGateway.Shared.csproj
     dotnet add "$serverProj" package Microsoft.Extensions.Logging.ApplicationInsights
 
@@ -74,32 +76,28 @@ if [ -f "$serverProj" ]; then
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using SecureGatewat.Shared;
-using SecureGatewat.Server.Services;
+using SecureGateway.Shared;
+using SecureGateway.Server.Services;
 using Microsoft.Extensions.Azure;
 using Azure.Identity;
 
 var host = new HostBuilder()
-    .ConfigureFunctionsWebApplication()
-    .ConfigureServices(services => {
+    .ConfigureFunctionsWorkerDefaults()
+    .ConfigureServices((context, services) => {
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
 
-        services.AddAzureClients(clientBuilder => {
-            var kvUri = Environment.GetEnvironmentVariable("KeyVaultUri") 
-                ?? throw new InvalidOperationException("The environment variable 'KeyVaultUri' was not found.");
-            clientBuilder.UseCredential(new DefaultAzureCredential());
-        });
-
         services.AddSingleton<ICredentialService, CredentialService>();
+        services.AddSingleton<ISecurityService, SecurityService>();
+        services.AddScoped<IAuditService, AuditService>();
     })
-    .Build();
+    .Build()
 
 host.Run();
 
 EOF
 
-    mkdir -p SecureGateway.Server/Functions SecureGateway.Server/Services
+    mkdir -p SecureGateway.Server/Functions SecureGateway.Server/Services SecureGateway.Server/Interfaces
 else
     echo -e "  \e[31m✘ FATAL ERROR: The Server project was not found.\e[0m"
     exit 1
