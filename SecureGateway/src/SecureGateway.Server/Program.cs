@@ -13,6 +13,7 @@ using Polly.Retry;
 using Polly.CircuitBreaker;
 using System.Threading.RateLimiting;
 using System.Diagnostics;
+using Microsoft.Extensions.Configuration;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
@@ -83,10 +84,11 @@ var host = new HostBuilder()
         {
             var inner = sp.GetRequiredService<VaultService>();
             var cache = sp.GetRequiredService<IMemoryCache>();
+            var config = sp.GetRequiredService<IConfiguration>();
             var logger = sp.GetRequiredService<ILogger<CachedVaultService>>();
             var m = sp.GetRequiredService<Meter>();
             
-            return new CachedVaultService(inner, cache, logger, m);
+            return new CachedVaultService(inner, cache, config, logger, m);
         });
     })
     .Build();
