@@ -1,0 +1,14 @@
+// Name: Threat Detection and Recurring Failures
+// Description: Groups failures by IP and ClientId to identify brute force or bypass attempts.
+
+traces
+| where customDimensions.Category == "SecureGateway.Server.Functions.HandshakeFunction"
+| extend 
+    Result = tostring(customDimensions.Result),
+    ClientIP = tostring(customDimensions.ClientIP),
+    ClientId = tostring(customDimensions.ClientId)
+| where Result == "Unauthorized" or Result == "Forbidden"
+| summarize TotalFailures = count() by ClientIP, ClientId, bin(timestamp, 15m)
+| where TotalFailures > 5
+| project timestamp, ClientIP, ClientId, TotalFailures
+| order by TotalFailures desc

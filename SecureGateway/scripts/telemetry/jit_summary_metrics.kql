@@ -1,0 +1,8 @@
+// Name: Executive Access Summary
+// Description: Aggregates success vs failure for dashboard visualization.
+
+traces
+| where customDimensions.Category == "SecureGateway.Server.Functions.HandshakeFunction"
+| extend Result = tostring(customDimensions.Result)
+| summarize Count = count() by Result
+| render piechart

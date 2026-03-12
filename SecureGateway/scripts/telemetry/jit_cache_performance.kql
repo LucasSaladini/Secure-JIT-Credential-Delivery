@@ -1,0 +1,7 @@
+// Name: Cache Performance Metrics
+traces
+| where message has "VaultCache"
+| extend Result = tostring(customDimensions.Result),
+         Resource = tostring(customDimensions.ResourceKey)
+| summarize Count = count() by Result
+| render piechart

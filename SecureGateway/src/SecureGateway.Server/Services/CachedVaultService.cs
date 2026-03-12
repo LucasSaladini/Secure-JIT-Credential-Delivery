@@ -9,11 +9,11 @@ public class CachedVaultService(IVaultService inner, IMemoryCache cache, ILogger
     {
         if (cache.TryGetValue(resourceKey, out string? cachedSecret) && cachedSecret != null)
         {
-            logger.LogInformation("Cache hit for resource: {ResourceKey}", resourceKey);
+            logger.LogInformation("VaultCache: {Result} for {ResourceKey}", "Hit", resourceKey);
             return cachedSecret;
         }
 
-        logger.LogInformation("Cache miss for resource: {ResourceKey}. Fetching from Key Vault", resourceKey);
+        logger.LogInformation("VaultCache: {Result} for {ResourceKey}. Fetching from provider.", "Miss", resourceKey);
 
         var secret = await inner.GetSecretAsync(resourceKey);
         var cacheOptions = new MemoryCacheEntryOptions()

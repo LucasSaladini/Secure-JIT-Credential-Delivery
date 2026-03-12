@@ -31,7 +31,7 @@ public class HandshakeFunction
         
         if (request == null)
         {
-            _logger.LogWarning("Empty request body received.");
+            _logger.LogWarning("Security Check: {Result}. Reason: {Reason}", "BadRequest", "Empty Body");
             return req.CreateResponse(HttpStatusCode.BadRequest);
         }
 
@@ -45,6 +45,22 @@ public class HandshakeFunction
         {
             await _auditService.LogAccessAsync(request, false, "Invalid Signature", clientIp);
             _logger.LogWarning("Invalid signature for ClientId: {ClientId}", request.ClientId);
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
+        }
+
+        using (_logger.BeginScope(new Dictionary<string, object>
+        {
+            ["ClientId"] = request.ClientId,
+            ["ClientIP"] = clientIp,
+            ["ResourceKey"] = request.ResourceKey
+        }))
+
+        if (!_securityService.IsValidSignature(request, mockClientSecret))
+        {
+            await _auditService.LogAccessAsync(request, false, "Invalid Signature", clientIp);
+            
+            _logger.LogWarning("Security Check: {Result}. Reason: {Reason}", "Unauthorized", "Invalid Signature");
+            
             return req.CreateResponse(HttpStatusCode.Unauthorized);
         }
 

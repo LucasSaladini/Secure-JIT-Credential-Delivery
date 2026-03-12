@@ -26,7 +26,8 @@ public class VaultService : IVaultService
     {
         try
         {
-            _logger.LogInformation("Retrieving secret for resource: {ResourceKey}", resourceKey);
+            _logger.LogInformation("VaultOperation: {Operation} | Status: {Status} | Resource: {ResourceKey}", 
+                "GetSecret", "Started", resourceKey);
 
             KeyVaultSecret secret = await _secretClient.GetSecretAsync(resourceKey);
 
@@ -34,7 +35,9 @@ public class VaultService : IVaultService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving secret {ResourceKey} from Key Vault", resourceKey);
+            _logger.LogError(ex, "VaultOperation: {Operation} | Status: {Status} | Resource: {ResourceKey} | Error: {ErrorMessage}", 
+                "GetSecret", "Failed", resourceKey, ex.Message);
+                
             throw new InvalidOperationException("Could not retrieve the requested resource.");
         }
     }

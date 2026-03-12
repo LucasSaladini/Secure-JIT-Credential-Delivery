@@ -1,0 +1,13 @@
+// Name: Detailed JIT Handshake Audit
+// Description: Lists all security events with IP, ClientId, and result details.
+
+traces
+| where customDimensions.Category == "SecureGateway.Server.Functions.HandshakeFunction"
+| extend 
+    ClientId = tostring(customDimensions.ClientId),
+    Result = tostring(customDimensions.Result),
+    Reason = tostring(customDimensions.Reason),
+    ClientIP = tostring(customDimensions.ClientIP),
+    HandshakeType = "JIT-Access"
+| project timestamp, ClientId, Result, Reason, ClientIP, operation_Id, message
+| order by timestamp desc
