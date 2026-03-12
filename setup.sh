@@ -67,9 +67,13 @@ if [ -f "$serverProj" ]; then
     dotnet add "$serverProj" package OtpNet
     dotnet add "$serverProj" package Microsoft.Data.SqlClient
     dotnet add "$serverProj" package Dapper
-    otnet add "$serverProj" package Microsoft.Extensions.Logging.ApplicationInsights
+    dotnet add "$serverProj" package Microsoft.Extensions.Logging.ApplicationInsights
     dotnet add "$serverProj" reference SecureGateway.Shared/SecureGateway.Shared.csproj
     dotnet add "$serverProj" package Microsoft.Extensions.Logging.ApplicationInsights
+    dotnet add "$serverProj" package Microsoft.Extensions.Caching.Memory
+    dotnet add "$serverProj" package Microsoft.Extensions.Configuration.Binder
+    dotnet add "$serverProj" package Microsoft.Extensions.Http.Polly
+    dotnet add "$serverProj" package System.Diagnostics.DiagnosticSource
 
     # Creating Program.cs 
     cat <<EOF > SecureGateway.Server/Program.cs

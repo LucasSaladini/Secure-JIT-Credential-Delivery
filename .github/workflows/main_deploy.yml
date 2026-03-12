@@ -8,12 +8,17 @@ on:
 
 env:
   AZURE_FUNCTIONAPP_NAME: 'func-secure-gateway-prod'
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' 
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: './SecureGateway/output' 
   DOTNET_VERSION: '8.0.x'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./SecureGateway
+
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@v4
@@ -21,7 +26,9 @@ jobs:
       - name: 'Setup DotNet ${{ env.DOTNET_VERSION }} Environment'
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: 'Restore Dependencies'
         run: dotnet restore
@@ -39,5 +46,5 @@ jobs:
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-          package: './output'
+          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
