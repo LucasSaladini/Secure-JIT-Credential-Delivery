@@ -1,6 +1,6 @@
 # Secure-JIT-Credential-Delivery 🛡️
 
-[![CI/CD Pipeline](https://github.com/LucasSaladini/Secure-JIT-Credential-Delivery/actions/workflows/deploy.yml/badge.svg)](https://github.com/LucasSaladini/Secure-JIT-Credential-Delivery/actions)
+[![CI/CD Pipeline](https://github.com/LucasSaladini/Secure-JIT-Credential-Delivery/actions/workflows/main_deploy.yml/badge.svg)](https://github.com/LucasSaladini/Secure-JIT-Credential-Delivery/actions)
 ![.NET 8/10](https://img.shields.io/badge/.NET-8.0%20%7C%2010.0-blue)
 
 ### 📋 Overview
