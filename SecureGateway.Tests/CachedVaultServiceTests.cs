@@ -61,13 +61,51 @@ public class CachedVaultServiceTests : IDisposable
         // Act
         await _cachedService.GetSecretAsync(resourceKey);
         
-        // Simulando expiração removendo manualmente
-        _memoryCache.Remove(resourceKey);
+        _memoryCache.Remove(resourceKey); 
         
         await _cachedService.GetSecretAsync(resourceKey);
 
         // Assert
         _innerVaultMock.Verify(v => v.GetSecretAsync(resourceKey), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task GetSecretAsync_ShouldReturnFromCache_WhenKeyExists()
+    {
+        // Arrange
+        var resourceKey = "ApiKey";
+        var cachedValue = "cached-secret-123";
+        
+        _memoryCache.Set(resourceKey, cachedValue);
+
+        // Act
+        var result = await _cachedService.GetSecretAsync(resourceKey);
+
+        // Assert
+        Assert.Equal(cachedValue, result);
+        
+        _innerVaultMock.Verify(x => x.GetSecretAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetSecretAsync_ShouldCallInnerService_AndPopulateCache_WhenCacheIsEmpty()
+    {
+        // Arrange
+        var resourceKey = "NewKey";
+        var vaultValue = "value-from-vault";
+        
+        _innerVaultMock
+            .Setup(x => x.GetSecretAsync(resourceKey))
+            .ReturnsAsync(vaultValue);
+
+        // Act
+        await _cachedService.GetSecretAsync(resourceKey);
+
+        // Assert
+        var exists = _memoryCache.TryGetValue(resourceKey, out string? val);
+        
+        Assert.True(exists, $"Error: The key '{resourceKey}' was not found on cache.");
+        Assert.Equal(vaultValue, val);
     }
 
     public void Dispose()

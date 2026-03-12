@@ -8,6 +8,11 @@ using SecureGateway.Server.Interfaces;
 using SecureGateway.Server.Services;
 using System.Diagnostics.Metrics;
 using OpenTelemetry.Resources;
+using Polly;
+using Polly.Retry;
+using Polly.CircuitBreaker;
+using System.Threading.RateLimiting;
+using System.Diagnostics;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
@@ -28,6 +33,43 @@ var host = new HostBuilder()
 
         services.AddMemoryCache(options => {
             options.SizeLimit = 1024;
+        });
+
+        var cbCounter = meter.CreateCounter<long>("vault_circuit_breaker_open_total");
+
+        services.AddResiliencePipeline("vault-strategy", builder =>
+        {
+            builder.AddRetry(new RetryStrategyOptions
+            {
+                ShouldHandle = new PredicateBuilder().Handle<Exception>(),
+                BackoffType = DelayBackoffType.Exponential,
+                UseJitter = true,
+                MaxRetryAttempts = 3,
+                Delay = TimeSpan.FromSeconds(2)
+            })
+            .AddCircuitBreaker(new CircuitBreakerStrategyOptions
+            {
+                ShouldHandle = new PredicateBuilder().Handle<Exception>(),
+                FailureRatio = 0.5,
+                MinimumThroughput = 10,
+                BreakDuration = TimeSpan.FromSeconds(15),
+                OnOpened = args => 
+                {
+                    cbCounter.Add(1, new TagList { { "strategy", "vault-strategy" } });
+                    return default;
+                },
+                OnClosed = args =>
+                {
+                    return default;
+                }
+            })
+            .AddRateLimiter(new FixedWindowRateLimiter( new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100, 
+                Window = TimeSpan.FromSeconds(1),
+                QueueLimit = 10,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst 
+            }));
         });
 
         services.AddApplicationInsightsTelemetryWorkerService();
