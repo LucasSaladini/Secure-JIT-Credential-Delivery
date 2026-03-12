@@ -1,0 +1,6 @@
+# Formula: (Hits / Total) * 100
+(
+  sum(rate(vault_cache_hits_total[5m])) 
+  / 
+  (sum(rate(vault_cache_hits_total[5m])) + sum(rate(vault_cache_misses_total[5m])))
+) * 100

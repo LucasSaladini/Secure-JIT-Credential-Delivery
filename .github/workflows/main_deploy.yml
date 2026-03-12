@@ -1,0 +1,43 @@
+name: Deploy SecureGateway to Azure Functions
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_NAME: 'func-secure-gateway-prod'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' 
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: 'Setup DotNet ${{ env.DOTNET_VERSION }} Environment'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 'Restore Dependencies'
+        run: dotnet restore
+
+      - name: 'Run Tests'
+        run: dotnet test --no-restore --verbosity normal
+
+      - name: 'Build Project'
+        run: dotnet build --configuration Release --no-restore
+
+      - name: 'Publish Project'
+        run: dotnet publish --configuration Release --output ./output
+
+      - name: 'Run Azure Functions Action'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          package: './output'
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}

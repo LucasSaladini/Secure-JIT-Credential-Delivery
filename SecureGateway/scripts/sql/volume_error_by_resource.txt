@@ -1,0 +1,1 @@
+sum by (resource) (rate(vault_request_duration_ms_count{status="Failed"}[5m]))

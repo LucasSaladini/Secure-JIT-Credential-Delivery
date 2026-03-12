@@ -1,0 +1,2 @@
+# Quantile of 95% based on buckets histogram
+histogram_quantile(0.95, sum by (le) (rate(vault_request_duration_ms_bucket[5m])))
